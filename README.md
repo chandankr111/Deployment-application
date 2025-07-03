@@ -1,106 +1,80 @@
-# Vercel-like Deployment Platform 🧩
+# 🚀 Vercel-like Deployment Platform
 
-A simplified full-stack Vercel-like platform that allows users to deploy GitHub repositories using a custom dashboard and deployment flow.
+A simplified full-stack Vercel-style platform that allows users to deploy GitHub repositories using a custom dashboard and automated deployment pipeline.
 
 ---
 
-## 🏗 Project Structure
+## 🧩 Project Structure
 
-```bash
 vercel-clone/
 │
-├── upload-service/      # Handles repository upload & cloning
-├── deploy-service/      # Builds and deploys the cloned project
-├── handler-server/      # Manages API requests and controls deployment lifecycle
-├── frontend/            # Frontend UI for user input and deployment status
-└── output/              # Temporarily holds user-uploaded projects
-🔧 Services
-1. 📤 Upload Service (upload-service/)
-Accepts GitHub repository URLs.
+├── upload-service/ # Handles GitHub repo upload & cloning
+├── deploy-service/ # Builds and deploys the project to Cloudflare R2
+├── handler-server/ # Central orchestrator and API router
+├── frontend/ # User-facing UI built with React + Tailwind
+└── output/ # Temporary folder for cloned project sources
 
-Clones the repository into the /output/:id directory.
+yaml
+Copy
+Edit
 
-Generates a unique upload ID used for further processing.
+---
 
-Exposes: POST /deploy
+## 🔧 Services Overview
 
-2. 🚀 Deploy Service (deploy-service/)
-Takes the cloned repo path (/output/:id) and installs dependencies.
+### 📤 1. Upload Service (`upload-service/`)
 
-Builds the project using npm install && npm run build.
+- Accepts GitHub repository URLs from the frontend.
+- Clones the repository into `output/:id`.
+- Generates a unique `uploadId` for tracking.
 
-On success, the site is uploaded to Cloudflare R2 bucket (S3 compatible).
+**Endpoint:**
 
-Exposes: GET /status?id=<uploadId>
+POST /deploy
+Body: { "repoUrl": "https://github.com/user/repo" }
 
-3. 🧠 Handler Server (handler-server/)
-Central controller that routes between upload and deploy services.
 
-Handles state updates (e.g., "uploading", "building", "deployed").
-
-Connects with Redis to track the current status of deployments.
-
-🗃 Storage
-☁️ Cloudflare R2 (S3-Compatible)
-Used to store and serve built static files.
-
-Compatible with AWS SDK (@aws-sdk/client-s3)
-
-Bucket name and credentials configured via environment variables.
-
-⚡ Local Redis (via Docker)
-Used to store job status (uploading, building, deployed, etc).
-
-To run Redis locally:
+### 2. Deploy Service (deploy-service/)
+Installs dependencies and builds the project:
 
 bash
 Copy
 Edit
-docker run -d --name redis -p 6379:6379 redis
-To access Redis CLI:
+npm install && npm run build
+Uploads the static output to a Cloudflare R2 bucket.
 
-bash
-Copy
-Edit
-docker exec -it redis redis-cli
-🖥️ Running Locally
-1. Install dependencies:
-bash
-Copy
-Edit
-npm install
-Run separately in each folder (upload-service/, deploy-service/, handler-server/, etc.)
+Uses Redis to update the status of the deployment.
 
-2. Start Upload Service
-bash
-Copy
-Edit
-cd upload-service
-npm run dev
-3. Start Deploy Service
-bash
-Copy
-Edit
-cd deploy-service
-npm run dev
-4. Start Handler Server
-bash
-Copy
-Edit
-cd handler-server
-npm run dev
-5. Start Frontend
-bash
-Copy
-Edit
-cd frontend
-npm run dev
-Access the frontend at http://localhost:5173
+Endpoint:
 
-🌐 Environment Variables
-Setup your .env files in each service accordingly.
+http
+Copy
+Edit
+GET /status?id=<uploadId>
+🧠 3. Handler Server (handler-server/)
+Orchestrates the upload & deployment lifecycle.
 
-For Upload & Deploy services:
+Tracks the status in Redis:
+
+uploading
+
+building
+
+deployed
+
+failed
+
+Serves status updates to the frontend.
+
+☁️ Cloudflare R2 (Static Hosting)
+Used for hosting final static build files.
+
+Compatible with AWS SDK (S3 API)
+
+Credentials and bucket details are stored in .env
+
+Required .env variables:
+
 env
 Copy
 Edit
@@ -108,29 +82,78 @@ AWS_ACCESS_KEY_ID=your_key
 AWS_SECRET_ACCESS_KEY=your_secret
 BUCKET_NAME=your_bucket
 R2_REGION=auto
-R2_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com
-For Redis (optional):
-env
+R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+⚡ Redis (Local)
+Used for deployment status tracking.
+
+Run Redis with Docker:
+bash
 Copy
 Edit
-REDIS_URL=redis://localhost:6379
-✅ Deployment Status Example
-Once deployed, users will see the deployed URL:
+docker run -d --name redis -p 6379:6379 redis
+Access Redis CLI:
+bash
+Copy
+Edit
+docker exec -it redis redis-cli
+🖥️ Running Locally
+1. Install dependencies
+Run npm install in each folder:
+
+bash
+Copy
+Edit
+cd upload-service && npm install
+cd deploy-service && npm install
+cd handler-server && npm install
+cd frontend && npm install
+2. Start the services
+bash
+Copy
+Edit
+# Upload Service
+cd upload-service
+npm run dev
+bash
+Copy
+Edit
+# Deploy Service
+cd deploy-service
+npm run dev
+bash
+Copy
+Edit
+# Handler Server
+cd handler-server
+npm run dev
+bash
+Copy
+Edit
+# Frontend
+cd frontend
+npm run dev
+Now open http://localhost:5173
+
+🌐 Deployment Output URL
+After successful deployment, your site will be available at:
 
 arduino
 Copy
 Edit
 http://<uploadId>.chandanvercel.com/index.html
 ✨ Features
-Real-time deployment status polling
+✅ GitHub repo upload via UI
 
-GitHub integration (via repo cloning)
+✅ Automated build and deploy flow
 
-Redis-based job state management
+✅ Redis-backed real-time deployment status
 
-Cloudflare R2 storage integration
+✅ Cloudflare R2 static hosting
 
-Docker-powered Redis
+✅ Fully containerized Redis
 
-Vite + Tailwind frontend
+✅ Vite + Tailwind-based modern UI
 
+👨‍💻 Author
+Chandan Kumar
+GitHub: @chandankr111
