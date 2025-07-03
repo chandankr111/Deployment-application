@@ -11,8 +11,8 @@ function buildProject(id) {
     return new Promise((resolve, reject) => {
         const child = (0, child_process_1.spawn)("npm", ["install", "&&", "npm", "run", "build"], {
             cwd: projectPath,
-            shell: true, // Needed for '&&' to work
-            env: process.env,
+            shell: true, // Enables '&&'
+            env: Object.assign(Object.assign({}, process.env), { NODE_OPTIONS: "--openssl-legacy-provider" }),
         });
         child.stdout.on("data", (data) => {
             console.log(`[build stdout]: ${data}`);

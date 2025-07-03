@@ -24,6 +24,7 @@ export async function downloadS3Folder(prefix: string) {
     })
   );
 
+  console.log(allFiles);
   if (!allFiles.Contents || allFiles.Contents.length === 0) {
     console.warn("⚠️ No files found in R2 with prefix:", prefix);
     return;

@@ -5,9 +5,13 @@ import { buildProject } from "./utils";
 const subscriber = createClient({
   url: 'redis://localhost:6379',
 });
-
+const publisher = createClient({
+    url: 'redis://localhost:6379',
+  });
+ 
 async function main() {
   await subscriber.connect();
+ await publisher.connect();
 
   while (true) {
     try {
@@ -25,7 +29,9 @@ async function main() {
 
       console.log("⬆️ Uploading final dist...");
       await copyFinalDist(id);
+      publisher.hSet("status", id, "deployed");
 
+     
       console.log("✅ Deployment complete:", id);
     } catch (err) {
       console.error("❌ Error during deployment:", err);

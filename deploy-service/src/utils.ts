@@ -7,8 +7,11 @@ export function buildProject(id: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn("npm", ["install", "&&", "npm", "run", "build"], {
       cwd: projectPath,
-      shell: true, // Needed for '&&' to work
-      env: process.env,
+      shell: true, // Enables '&&'
+      env: {
+        ...process.env,
+        NODE_OPTIONS: "--openssl-legacy-provider", // ✅ Fix for OpenSSL 3.x issue
+      },
     });
 
     child.stdout.on("data", (data) => {

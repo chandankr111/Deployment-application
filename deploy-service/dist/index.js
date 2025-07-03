@@ -15,9 +15,13 @@ const utils_1 = require("./utils");
 const subscriber = (0, redis_1.createClient)({
     url: 'redis://localhost:6379',
 });
+const publisher = (0, redis_1.createClient)({
+    url: 'redis://localhost:6379',
+});
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         yield subscriber.connect();
+        yield publisher.connect();
         while (true) {
             try {
                 const response = yield subscriber.brPop('build-queue', 0);
@@ -30,6 +34,7 @@ function main() {
                 yield (0, utils_1.buildProject)(id);
                 console.log("⬆️ Uploading final dist...");
                 yield (0, aws_1.copyFinalDist)(id);
+                publisher.hSet("status", id, "deployed");
                 console.log("✅ Deployment complete:", id);
             }
             catch (err) {
