@@ -1,159 +1,235 @@
-# 🚀 Vercel-like Deployment Platform
+# 🚀 Deployment Platform
 
-A simplified full-stack Vercel-style platform that allows users to deploy GitHub repositories using a custom dashboard and automated deployment pipeline.
+A simplified full-stack deployment platform inspired by Vercel that allows users to deploy GitHub repositories with real-time status tracking.
 
----
 
-## 🧩 Project Structure
+## ✨ Features
 
+- 🔗 **GitHub Integration** - Deploy directly from GitHub repositories
+- 🏗️ **Automated Builds** - Automatic dependency installation and build process
+- ☁️ **Cloud Storage** - Static hosting via Cloudflare R2 (S3-compatible)
+- 📊 **Real-time Status** - Live deployment tracking with Redis
+
+- 🐳 **Docker Support** - Containerized Redis for easy setup
+- ⚡ **Fast Deployment** - Optimized build and deployment pipeline
+
+## 🏗️ Architecture
+
+```
 vercel-clone/
-│
-├── upload-service/ # Handles GitHub repo upload & cloning
-├── deploy-service/ # Builds and deploys the project to Cloudflare R2
-├── handler-server/ # Central orchestrator and API router
-├── frontend/ # User-facing UI built with React + Tailwind
-└── output/ # Temporary folder for cloned project sources
-
-yaml
-Copy
-Edit
-
----
+├── upload-service/     # GitHub repo cloning & upload handling
+├── deploy-service/     # Build process & Cloudflare R2 deployment
+├── handler-server/     # API orchestration & status management
+├── frontend/          # React UI with Tailwind CSS
+└── output/           # Temporary storage for cloned repositories
+```
 
 ## 🔧 Services Overview
 
-### 📤 1. Upload Service (`upload-service/`)
+### 📤 Upload Service
+Handles GitHub repository processing and cloning.
 
-- Accepts GitHub repository URLs from the frontend.
-- Clones the repository into `output/:id`.
-- Generates a unique `uploadId` for tracking.
+**Key Features:**
+- Repository URL validation
+- Secure cloning to isolated directories
+- Unique upload ID generation
+- Error handling for invalid repositories
 
-**Endpoint:**
-
+**API Endpoint:**
+```http
 POST /deploy
-Body: { "repoUrl": "https://github.com/user/repo" }
+Content-Type: application/json
 
+{
+  "repoUrl": "https://github.com/username/repository"
+}
+```
 
-### 2. Deploy Service (deploy-service/)
-Installs dependencies and builds the project:
+### 🚀 Deploy Service
+Manages the build and deployment process.
 
-bash
-Copy
-Edit
-npm install && npm run build
-Uploads the static output to a Cloudflare R2 bucket.
+**Key Features:**
+- Automated dependency installation
+- Build process execution
+- Cloudflare R2 upload
+- Build status tracking
 
-Uses Redis to update the status of the deployment.
-
-Endpoint:
-
-http
-Copy
-Edit
+**API Endpoint:**
+```http
 GET /status?id=<uploadId>
-🧠 3. Handler Server (handler-server/)
-Orchestrates the upload & deployment lifecycle.
+```
 
-Tracks the status in Redis:
+### 🧠 Handler Server
+Central orchestrator that coordinates between services.
 
-uploading
+**Deployment States:**
+- `uploading` - Repository is being cloned
+- `building` - Dependencies installing and building
+- `deployed` - Successfully deployed and live
+- `failed` - Deployment encountered an error
 
-building
+## 🚀 Quick Start
 
-deployed
+### Prerequisites
 
-failed
+- Node.js 18+ and npm
+- Docker (for Redis)
+- Cloudflare R2 account
+- Git
 
-Serves status updates to the frontend.
+### 1. Clone the Repository
 
-☁️ Cloudflare R2 (Static Hosting)
-Used for hosting final static build files.
+```bash
+git clone https://github.com/chandankr111/Deployment-application.git
+cd Deployment-application
+```
 
-Compatible with AWS SDK (S3 API)
+### 2. Environment Setup
 
-Credentials and bucket details are stored in .env
+Create `.env` files in each service directory:
 
-Required .env variables:
-
-env
-Copy
-Edit
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-BUCKET_NAME=your_bucket
+```env
+# Cloudflare R2 Configuration
+AWS_ACCESS_KEY_ID=your_r2_access_key
+AWS_SECRET_ACCESS_KEY=your_r2_secret_key
+BUCKET_NAME=your_r2_bucket_name
 R2_REGION=auto
 R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
-⚡ Redis (Local)
-Used for deployment status tracking.
 
-Run Redis with Docker:
-bash
-Copy
-Edit
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
+```
+
+### 3. Start Redis
+
+```bash
 docker run -d --name redis -p 6379:6379 redis
-Access Redis CLI:
-bash
-Copy
-Edit
-docker exec -it redis redis-cli
-🖥️ Running Locally
-1. Install dependencies
-Run npm install in each folder:
+```
 
-bash
-Copy
-Edit
+### 4. Install Dependencies
+
+```bash
+# Install all service dependencies
+npm run install:all
+
+# Or install manually for each service
 cd upload-service && npm install
-cd deploy-service && npm install
-cd handler-server && npm install
-cd frontend && npm install
-2. Start the services
-bash
-Copy
-Edit
-# Upload Service
-cd upload-service
+cd ../deploy-service && npm install
+cd ../handler-server && npm install
+cd ../frontend && npm install
+```
+
+### 5. Start All Services
+
+```bash
+# Start all services concurrently
 npm run dev
-bash
-Copy
-Edit
-# Deploy Service
-cd deploy-service
-npm run dev
-bash
-Copy
-Edit
-# Handler Server
-cd handler-server
-npm run dev
-bash
-Copy
-Edit
-# Frontend
-cd frontend
-npm run dev
-Now open http://localhost:5173
 
-🌐 Deployment Output URL
-After successful deployment, your site will be available at:
+# Or start each service individually
+npm run start:upload    # Upload service on port 3000
+npm run start:deploy    
+npm run start:handler   # Handler server on port 3002
+npm run dev:frontend  # Frontend on port 5173
+```
 
-arduino
-Copy
-Edit
-http://<uploadId>.chandanvercel.com/index.html
-✨ Features
-✅ GitHub repo upload via UI
+### 6. Access the Platform
 
-✅ Automated build and deploy flow
+Open your browser and navigate to:
+```
+http://localhost:5173
+```
 
-✅ Redis-backed real-time deployment status
+## 📖 Usage
 
-✅ Cloudflare R2 static hosting
+1. **Enter GitHub Repository URL**
+   - Paste any public GitHub repository URL
+   - Click "Deploy" to start the process
 
-✅ Fully containerized Redis
+2. **Monitor Deployment**
+   - Watch real-time status updates
+   - View build logs and progress
 
-✅ Vite + Tailwind-based modern UI
+3. **Access Deployed Site**
+   - Get your unique deployment URL
+   - Format: `http://<uploadId>.chandanvercel.com/index.html`
 
-👨‍💻 Author
-Chandan Kumar
-GitHub: @chandankr111
+## 🛠️ Development
+
+### Project Scripts
+
+```bash
+# Development
+npm run start:upload       # Start upload service only
+npm run start:deploy       # Start deploy service only
+npm run start:handler      # Start handler server only
+npm run dev:frontend     # Start frontend only
+
+# Production
+npm run build            # Build all services
+npm run start            # Start production servers
+
+# Utilities
+npm run install:all      # Install all dependencies
+npm run clean           # Clean output directory
+```
+
+### Redis Commands
+
+```bash
+# Access Redis CLI
+docker exec -it redis redis-cli
+
+# Monitor deployment status
+HGETALL deployment:<uploadId>
+
+# Clear all data
+FLUSHALL
+```
+
+## 🔒 Security Considerations
+
+- Repository URLs are validated before processing
+- Temporary files are cleaned up after deployment
+- Build processes run in isolated environments
+- Environment variables are properly secured
+
+## 🌐 Deployment States
+
+| State | Description | Duration |
+|-------|-------------|----------|
+| `uploading` | Cloning repository from GitHub | 10-30s |
+| `building` | Installing dependencies and building | 1-5min |
+| `deployed` | Successfully deployed and accessible | - |
+| `failed` | Error occurred during process | - |
+
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Inspired by [Vercel](https://vercel.com)
+- Built with modern web technologies
+- Powered by Cloudflare R2 for reliable hosting
+
+## 📧 Contact
+
+**Chandan Kumar**
+- GitHub: [@chandankr111](https://github.com/chandankr111)
+- Email: chandankr824142@gmail.com
+
+---
+
+<div align="center">
+  <p>Made with ❤️ by Chandan Kumar</p>
+  <p>⭐ Star this repository if you found it helpful!</p>
+</div>
